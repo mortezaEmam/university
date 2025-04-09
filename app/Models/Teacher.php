@@ -31,4 +31,20 @@ class Teacher extends Model
     {
         return $this->hasMany(CourseTeacher::class);
     }
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function faculty()
+    {
+        return $this->hasOneThrough(
+            Faculty::class,
+            Department::class,
+            'id', // Foreign key on departments table
+            'id', // Foreign key on faculties table
+            'department_id', // Local key on teachers table
+            'faculty_id' // Local key on departments table
+        );
+    }
 }
