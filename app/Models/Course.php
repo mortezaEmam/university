@@ -10,8 +10,14 @@ class Course extends Model
         'course_code',
         'title',
         'credit',
-        'description'
+        'description',
+        'department_id'
     ];
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 
     public function teachers()
     {
