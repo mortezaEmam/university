@@ -27,10 +27,10 @@ export default {
 
 <style scoped>
     .content {
-        background-image: url("build/assets/icons/background-orange.png");
+        background-image: url("/assets/icons/background.png");
     }
     .app-container {
-        background-image: url("build/assets/icons/background-orange.png");
+        background-image: url("/assets/icons/background.png");
         height: 100vh;
         padding-bottom: 50px
     }
