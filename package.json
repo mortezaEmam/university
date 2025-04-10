@@ -20,6 +20,11 @@
         "vue": "^3.5.13"
     },
     "dependencies": {
+        "bootstrap": "^5.3.5",
+        "datatables.net": "^2.2.2",
+        "dayjs": "^1.11.13",
+        "jalali-dayjs": "^0.0.1",
+        "sweetalert2": "^11.17.2",
         "vue-router": "^4.5.0"
     }
 }

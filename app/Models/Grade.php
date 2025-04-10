@@ -45,6 +45,6 @@ class Grade extends Model
             'id',
             'course_teacher_id',
             'teacher_id'
-        );
+        )->with('user');
     }
 }
