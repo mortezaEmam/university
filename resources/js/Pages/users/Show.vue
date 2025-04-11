@@ -7,9 +7,6 @@
 
     <!-- Student Information Card -->
     <div class="student-info-card" v-if="!loading">
-      <!--      <div class="student-info-header">-->
-      <!--        <h5>اطلاعات دانشجو</h5>-->
-      <!--      </div>-->
       <div class="student-info-body">
         <div class="row g-2">
           <div class="col-md-10">
@@ -67,21 +64,20 @@
 
     <!-- Grades Table -->
     <div class="grades-table-container" v-if="!loading">
-      <!--      <div class="table-header">-->
-      <!--        <h5>کارنامه تحصیلی</h5>-->
-      <!--      </div>-->
       <div class="table-responsive">
         <table class="table table-bordered table-hover">
           <thead class="table-header-bg">
           <tr>
-            <th width="5%">#</th>
-            <th width="10%">کد درس</th>
-            <th width="25%">نام درس</th>
-            <th width="8%">واحد</th>
-            <th width="10%">نمره</th>
-            <th width="15%">وضعیت نمره</th>
-            <th width="17%">استاد</th>
-            <th width="10%">توضیحات</th>
+            <th>#</th>
+            <th>کد درس</th>
+            <th>نام درس</th>
+            <th>واحد</th>
+            <th>نمره</th>
+            <th>وضعیت نمره</th>
+            <th>استاد</th>
+            <th>توضیحات</th>
+            <th>عملیات</th>
+
           </tr>
           </thead>
           <tbody>
@@ -95,7 +91,24 @@
               {{ getGradeStatus(grade.status) }}
             </td>
             <td>{{ grade.teacher?.user.first_name }} {{ grade.teacher?.user.last_name }}</td>
-            <td>{{ grade.description || '-' }}</td>
+            <td>{{ grade.comments || '-' }}</td>
+            <td>
+              <button
+                  v-if="grade.status !== 'passed'"
+                  @click="editGrade(grade)"
+                  class="btn btn-sm btn-primary me-1"
+              >
+                ویرایش
+              </button>
+              <button
+                  v-if="grade.status !== 'passed'"
+                  @click="deleteGrade(grade.id)"
+                  class="btn btn-sm btn-danger"
+              >
+                حذف
+              </button>
+            </td>
+
           </tr>
           </tbody>
         </table>
@@ -104,9 +117,36 @@
       <!-- GPA Section -->
       <div class="gpa-section">
         <div class="gpa-box">
-          <span class="gpa-label">معدل نرم:</span>
+          <span class="gpa-label">معدل ترم:</span>
           <span class="gpa-value">{{ averageGrade }}</span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Grade Modal -->
+  <div v-if="editingGrade" class="modal-backdrop">
+    <div class="modal-content-box">
+      <h5>ویرایش نمره</h5>
+      <div class="mb-2">
+        <label>نمره:</label>
+        <input type="number" v-model="editingGrade.grade" class="form-control" />
+      </div>
+      <div class="mb-2">
+        <label>وضعیت:</label>
+        <select v-model="editingGrade.status" class="form-control">
+          <option value="finalized">قطعی</option>
+          <option value="pending">در حال بررسی</option>
+          <option value="reviewing">اعلام شده</option>
+        </select>
+      </div>
+      <div class="mb-2">
+        <label>توضیحات:</label>
+        <textarea v-model="editingGrade.description" class="form-control" rows="3" />
+      </div>
+      <div class="d-flex justify-content-end">
+        <button class="btn btn-secondary me-2" @click="editingGrade = null">بستن</button>
+        <button class="btn btn-success" @click="updateGrade">ثبت تغییرات</button>
       </div>
     </div>
   </div>
@@ -114,77 +154,138 @@
 
 <script>
 import axios from "axios";
-import { ref } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import Swal from "sweetalert2";
 
 export default {
   setup() {
     const student = ref({});
     const loading = ref(true);
     const route = useRoute();
+    const editingGrade = ref(null);
 
-    function getUser() {
+    const getUser = () => {
       axios
-          .get(`/api/students/${route.params.id}/grades`)
-          .then(function (response) {
+          .get(`/api/students/${route.params.user}/grades`)
+          .then((response) => {
             student.value = response.data;
-            loading.value = false;
           })
-          .catch(function (error) {
+          .catch((error) => {
             console.log(error);
+          })
+          .finally(() => {
             loading.value = false;
           });
-    }
+    };
 
-    getUser();
 
-    return { student, loading };
-  },
-  methods: {
-    getGradeStatus(status) {
+    const updateGrade = () => {
+      if (!editingGrade.value) return;
+
+      const studentId = route.params.user;
+      const gradeId = editingGrade.value.id;
+
+      const payload = {
+        grade: editingGrade.value.grade,
+        status: editingGrade.value.status,
+        description: editingGrade.value.description || null,
+      };
+
+      axios.put(`/api/students/${studentId}/grades/${gradeId}`, payload)
+          .then(() => {
+            getUser();
+            editingGrade.value = null;
+            Swal.fire({
+              title: "متشکرم!",
+              text: "نمره دانشجو با موفقیت ویرایش شد",
+              icon: "success",
+              confirmButtonText: "Ok",
+            });
+          });
+    };
+
+    const deleteGrade = (gradeId) => {
+      const studentId = route.params.student;
+
+      if (confirm('آیا از حذف این نمره مطمئن هستید؟')) {
+        axios.delete(`/api/students/${studentId}/grades/${gradeId}`)
+            .then(() => {
+              fetchStudentGrades();
+            });
+      }
+    };
+
+
+    const editGrade = (grade) => {
+      editingGrade.value = { ...grade };
+    };
+
+    const getGradeStatus = (status) => {
       switch (status) {
-        case "passed":
+        case "finalized":
           return "قطعی";
-        case "incomplete":
-          return "در حال بررسی";
         case "pending":
+          return "در حال بررسی";
+        case "reviewing":
         default:
           return "اعلام شده";
       }
-    },
-    getStatusClass(status) {
+    };
+
+    const getStatusClass = (status) => {
       switch (status) {
-        case "passed":
+        case "finalized":
           return "status-passed";
-        case "incomplete":
+        case "reviewing":
           return "status-incomplete";
         case "pending":
         default:
           return "status-pending";
       }
-    }
-  },
-  computed: {
-    averageGrade() {
-      if (!this.student || !this.student.grades) return "---";
+    };
 
-      const validGrades = this.student.grades.filter(
-          (grade) => typeof grade.grade === "number" && grade.course?.credit
+    const averageGrade = computed(() => {
+      if (!student.value.grades) return "---";
+
+      const validGrades = student.value.grades.filter(
+          (grade) =>
+              typeof grade.grade === "number" && grade.course?.credit
       );
 
       if (validGrades.length === 0) return "---";
 
-      const totalCredits = validGrades.reduce((sum, grade) => sum + grade.course.credit, 0);
+      const totalCredits = validGrades.reduce(
+          (sum, grade) => sum + grade.course.credit,
+          0
+      );
       const totalWeightedGrades = validGrades.reduce(
           (sum, grade) => sum + grade.grade * grade.course.credit,
           0
       );
 
-      return totalCredits ? (totalWeightedGrades / totalCredits).toFixed(2) : "---";
-    },
+      return totalCredits
+          ? (totalWeightedGrades / totalCredits).toFixed(2)
+          : "---";
+    });
+
+    onMounted(getUser);
+
+    return {
+      student,
+      loading,
+      editingGrade,
+      editGrade,
+      updateGrade,
+      deleteGrade,
+      getGradeStatus,
+      getStatusClass,
+      averageGrade,
+    };
   },
 };
 </script>
+
 
 <style scoped>
 body {
@@ -208,7 +309,7 @@ body {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   margin-bottom: 25px;
-  background-color: #f9f9f9;
+  background-color: #FFFFFFCC;
 }
 
 .student-info-header {
@@ -371,4 +472,23 @@ body {
     margin-top: 20px;
   }
 }
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content-box {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+}
+
 </style>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Grade;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ class StudentController extends Controller
 
     public function index()
     {
-        $students = User::query()->whereHas( "student")->get();
+        $students = User::query()->whereHas("student")->get();
         return response()->json($students);
     }
 
@@ -22,25 +23,36 @@ class StudentController extends Controller
         return response()->json($student);
     }
 
-    public function grades($id)
+    public function grades($userId)
     {
         $student = Student::with(['grades.course', 'faculty', 'department', 'grades.teacher', 'user'])
-            ->where('user_id', $id)
+            ->where('user_id', $userId)
             ->first();
         return response()->json($student);
     }
-    public function editGrade($user,$courseTeacherId)
+
+    public function updateGrade(Request $request, $studentId, $gradeId)
     {
-        $student = Student::with(['grades' => function ($query) use ($courseTeacherId) {
-            $query->where('course_teacher_id', $courseTeacherId)
-                ->select('grade', 'course_teacher_id', 'student_id'); // فقط فیلدهای نمره و مورد نیاز
-        }, 'grades.course', 'grades.teacher', 'faculty', 'department', 'user'])
-            ->where('user_id', $user)
-            ->first();
-        $data = [
-            'student' => $student,
-            'grades' => $student->grades->first()
-        ];
-        return response()->json($data);
+        Grade::query()
+            ->where('id' ,$gradeId)
+            ->update([
+                'status' => $request->status,
+                'grade' => $request->grade,
+                'comments' => $request->description
+            ]);
+
+        return response()->json(['message' => 'نمره بروزرسانی شد']);
     }
+
+    public function destroyGrade($studentId, $gradeId)
+    {
+        $student = Student::findOrFail($studentId);
+        $grade = $student->grades()->where('id', $gradeId)->firstOrFail();
+
+        $grade->delete();
+
+        return response()->json(['message' => 'نمره حذف شد']);
+    }
+
+
 }

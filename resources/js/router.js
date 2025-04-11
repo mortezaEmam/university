@@ -29,7 +29,7 @@ const routes = [
     {
         path: '/students', name: 'userTemplate', component: TemplateUser, children: [
             { path: '', name: 'users', component: IndexUser },
-            { path: ':id/grades', name: 'userId', component: ShowUser },
+            { path: ':user/grades', name: 'userId', component: ShowUser },
             { path: ':user/grades/:courseTeacherId/edit', name: 'gradeEdit', component: EditGrade },
         ],
         beforeEnter: (to, from, next) => {

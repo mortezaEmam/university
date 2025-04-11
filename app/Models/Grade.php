@@ -14,6 +14,19 @@ class Grade extends Model
         'comments'
     ];
 
+    const STATUS_FINALIZED = 'finalized';
+    const STATUS_PENDING = 'pending';
+    const STATUS_REVIEWING = 'reviewing';
+
+    public static function getStatuses()
+    {
+        return [
+            self::STATUS_FINALIZED => 'قطعی',
+            self::STATUS_PENDING => 'در حال بررسی',
+            self::STATUS_REVIEWING => 'اعلام نشده',
+        ];
+    }
+
     public function student()
     {
         return $this->belongsTo(Student::class);

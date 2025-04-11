@@ -16,7 +16,8 @@ return new class extends Migration
             $table->foreignId('student_id')->constrained();
             $table->foreignId('course_teacher_id')->constrained('course_teacher'); // مشخص کردن نام جدول
             $table->float('grade')->nullable()->comment('نمره نهایی');
-            $table->enum('status', ['passed', 'failed', 'incomplete'])->nullable();
+            $table->enum('status', ['finalized', 'pending', 'reviewing'])
+                ->default('reviewing');
             $table->text('comments')->nullable();
             $table->timestamps();
 
