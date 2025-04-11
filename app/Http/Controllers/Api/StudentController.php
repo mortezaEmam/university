@@ -45,20 +45,34 @@ class StudentController extends Controller
 
     public function updateGrade(Request $request, $studentId, $gradeId)
     {
+        $validated = $request->validate([
+            'status' => ['required', 'in:accepted,rejected,pending'],
+            'grade' => ['required', 'numeric', 'between:0,20'],
+            'comments' => ['nullable', 'string', 'max:300'],
+        ], [
+            'status.required' => 'وضعیت نمره الزامی است.',
+            'status.in' => 'وضعیت انتخاب ‌شده نامعتبر است.',
+            'grade.required' => 'نمره الزامی است.',
+            'grade.numeric' => 'نمره باید عددی باشد.',
+            'grade.between' => 'نمره باید بین ۰ تا ۲۰ باشد.',
+            'comments.max' => 'توضیحات نمی‌تواند بیشتر از ۳۰۰ کاراکتر باشد.',
+        ]);
+
         Grade::query()
-            ->where('id' ,$gradeId)
+            ->where('id', $gradeId)
             ->update([
-                'status' => $request->status,
-                'grade' => $request->grade,
-                'comments' => $request->description
+                'status' => $validated['status'],
+                'grade' => $validated['grade'],
+                'comments' => $validated['comments'] ?? null,
             ]);
 
         return response()->json(['message' => 'نمره بروزرسانی شد']);
     }
 
+
     public function destroyGrade($studentId, $gradeId)
     {
-        $student = Student::findOrFail($studentId);
+        $student = Student::query()->where('user_id', $studentId)->first();
         $grade = $student->grades()->where('id', $gradeId)->firstOrFail();
 
         $grade->delete();

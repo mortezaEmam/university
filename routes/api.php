@@ -15,7 +15,7 @@ Route::prefix('/students')->group(function () {
     Route::get('{user}/grades', [StudentController::class, 'grades']);
 
     Route::put('/{user}/grades/{grade}', [StudentController::class, 'updateGrade']);
-    Route::delete('/{student}/grades/{grade}', [StudentController::class, 'destroyGrade']);
+    Route::delete('/{user}/grades/{grade}', [StudentController::class, 'destroyGrade']);
 
     Route::get('/{user}', [StudentController::class, 'show']);
 })->middleware('auth:sanctum');

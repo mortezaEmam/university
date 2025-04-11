@@ -144,23 +144,37 @@
   <div v-if="editingGrade" class="modal-backdrop">
     <div class="modal-content-box">
       <h5>ویرایش نمره</h5>
-      <div class="mb-2">
-        <label>نمره:</label>
-        <input type="number" v-model="editingGrade.grade" class="form-control" />
-      </div>
-      <div class="mb-2">
-        <label>وضعیت:</label>
-        <select v-model="editingGrade.status" class="form-control">
-          <option value="finalized">قطعی</option>
-          <option value="pending">در حال بررسی</option>
-          <option value="reviewing">اعلام شده</option>
-        </select>
-      </div>
-      <div class="mb-2">
-        <label>توضیحات:</label>
-        <textarea v-model="editingGrade.description" class="form-control" rows="3" />
-      </div>
-      <div class="d-flex justify-content-end">
+        <div class="mb-2">
+            <label>نمره:</label>
+            <input type="number" v-model="editingGrade.grade" class="form-control" />
+            <small class="text-danger" v-if="errors.grade">{{ errors.grade }}</small>
+        </div>
+
+        <div class="mb-2">
+            <label>وضعیت:</label>
+            <select v-model="editingGrade.status" class="form-control">
+                <option value="">انتخاب کنید</option>
+                <option value="finalized">قطعی</option>
+                <option value="pending">در حال بررسی</option>
+                <option value="reviewing">اعلام شده</option>
+            </select>
+            <small class="text-danger" v-if="errors.status">{{ errors.status }}</small>
+        </div>
+
+        <div class="mb-2">
+            <label>توضیحات:</label>
+            <textarea
+                v-model="editingGrade.comments"
+                class="form-control"
+                rows="3"
+                maxlength="300"
+            />
+            <small class="text-muted">حداکثر ۳۰۰ کاراکتر</small>
+            <small class="text-danger" v-if="errors.comments">{{ errors.comments }}</small>
+
+        </div>
+
+        <div class="d-flex justify-content-end">
         <button class="btn btn-secondary me-2" @click="editingGrade = null">بستن</button>
         <button class="btn btn-success" @click="updateGrade">ثبت تغییرات</button>
       </div>
@@ -228,9 +242,33 @@ export default {
             pagination.value.current_page = page;
             getGrades(page);
         }
+        const errors = ref({});
+        const validateGrade = () => {
+            const errs = {};
+
+            if (!editingGrade.value.grade && editingGrade.value.grade !== 0) {
+                errs.grade = "نمره را وارد کنید.";
+            } else if (editingGrade.value.grade < 0 || editingGrade.value.grade > 20) {
+                errs.grade = "نمره باید بین ۰ تا ۲۰ باشد.";
+            }
+
+            if (!editingGrade.value.status) {
+                errs.status = "وضعیت نمره را انتخاب کنید.";
+            }
+
+            if (editingGrade.value.comments && editingGrade.value.comments.length > 300) {
+                errs.comments = "توضیحات نمی‌تواند بیشتر از ۳۰۰ کاراکتر باشد.";
+            }
+
+            errors.value = errs;
+            return Object.keys(errs).length === 0;
+        };
+
 
         const updateGrade = () => {
             if (!editingGrade.value) return;
+
+            if (!validateGrade()) return; // اگر اعتبارسنجی رد شد، ادامه نده
 
             const studentId = route.params.user;
             const gradeId = editingGrade.value.id;
@@ -238,7 +276,7 @@ export default {
             const payload = {
                 grade: editingGrade.value.grade,
                 status: editingGrade.value.status,
-                description: editingGrade.value.description || null,
+                comments: editingGrade.value.comments || null,
             };
 
             axios
@@ -246,14 +284,22 @@ export default {
                 .then(() => {
                     getGrades(pagination.value.current_page);
                     editingGrade.value = null;
+                    errors.value = {}; // خطاها پاک شوند
                     Swal.fire({
                         title: "متشکرم!",
                         text: "نمره دانشجو با موفقیت ویرایش شد",
                         icon: "success",
                         confirmButtonText: "باشه",
                     });
+                })
+                .catch((error) => {
+                    if (error.response && error.response.status === 422) {
+                        errors.value = error.response.data.errors;
+                    }
                 });
         };
+
+
 
         const deleteGrade = (gradeId) => {
             const studentId = route.params.user;
@@ -262,7 +308,14 @@ export default {
                 axios
                     .delete(`/api/students/${studentId}/grades/${gradeId}`)
                     .then(() => {
+                        Swal.fire({
+                            title: "متشکرم!",
+                            text: "نمره دانشجو با موفقیت حذف شد",
+                            icon: "success",
+                            confirmButtonText: "باشه",
+                        });
                         getGrades(pagination.value.current_page);
+
                     });
             }
         };
@@ -337,6 +390,8 @@ export default {
             getStatusClass,
             averageGrade,
             fetchPage,
+            validateGrade,
+            errors
         };
     },
 };
@@ -385,7 +440,6 @@ body {
   font-weight: 500;
   font-size: 15px;
   line-height: 100%;
-  letter-spacing: 0%;
 }
 .student-grade-report {
   background-color: #fff;
