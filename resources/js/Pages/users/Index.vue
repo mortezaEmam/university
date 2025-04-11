@@ -10,6 +10,7 @@
 
 <script>
 import axios from "axios";
+import api from '@/axios';
 import { ref } from "vue";
 import UserCardViwe from "@/components/users/CardView.vue";
 
@@ -22,8 +23,8 @@ export default {
     const loading = ref(true);
 
     function getUsers() {
-      axios
-        .get("api/students")
+      api
+        .get("/students")
         .then(function (response) {
           users.value = response.data;
             console.log(users.value)

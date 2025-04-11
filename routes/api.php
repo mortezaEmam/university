@@ -18,7 +18,7 @@ Route::prefix('/students')->group(function () {
     Route::delete('/{user}/grades/{grade}', [StudentController::class, 'destroyGrade']);
 
     Route::get('/{user}', [StudentController::class, 'show']);
-})->middleware('auth:sanctum');
+})->middleware(['auth:api','admin']);
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return response()->json($request->user());
@@ -31,7 +31,7 @@ Route::prefix('date')->group(function () {
     Route::get('/current-full', [PersianDateController::class, 'fullDateInfo']);
     Route::get('/convert/{date}', [PersianDateController::class, 'gregorianToJalali']);
     Route::get('/persian-date', [PersianDateController::class, 'getPersianDate']);
-})->middleware('jwt.auth');
+});
 
 
 

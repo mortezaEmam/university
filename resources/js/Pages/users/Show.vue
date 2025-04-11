@@ -182,7 +182,7 @@
   </div>
 </template>
 <script>
-import axios from "axios";
+import api from '@/axios';
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import Swal from "sweetalert2";
@@ -206,8 +206,8 @@ export default {
         // دریافت اطلاعات دانشجو فقط یک‌بار
         const getUser = () => {
             loading.value = true;
-            axios
-                .get(`/api/students/${route.params.user}`)
+            api
+                .get(`/students/${route.params.user}`)
                 .then((response) => {
                     console.log(response.data);
                     user.value = response.data.user;
@@ -223,8 +223,8 @@ export default {
         // دریافت فقط جدول نمرات
         const getGrades = (page = 1) => {
             gradesLoading.value = true;
-            axios
-                .get(`/api/students/${route.params.user}/grades?page=${page}`)
+            api
+                .get(`/students/${route.params.user}/grades?page=${page}`)
                 .then((response) => {
                     grades.value = response.data.data;
                     pagination.value = response.data.meta;
@@ -279,8 +279,8 @@ export default {
                 comments: editingGrade.value.comments || null,
             };
 
-            axios
-                .put(`/api/students/${studentId}/grades/${gradeId}`, payload)
+            api
+                .put(`/students/${studentId}/grades/${gradeId}`, payload)
                 .then(() => {
                     getGrades(pagination.value.current_page);
                     editingGrade.value = null;
@@ -305,8 +305,8 @@ export default {
             const studentId = route.params.user;
 
             if (confirm("آیا از حذف این نمره مطمئن هستید؟")) {
-                axios
-                    .delete(`/api/students/${studentId}/grades/${gradeId}`)
+                api
+                    .delete(`/students/${studentId}/grades/${gradeId}`)
                     .then(() => {
                         Swal.fire({
                             title: "متشکرم!",

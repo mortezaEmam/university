@@ -1,9 +1,7 @@
-// src/plugins/axios.js
 import axios from 'axios';
 
-// ساخت نمونه axios
 const api = axios.create({
-    baseURL: '/api', // می‌تونی اینو طبق نیازت تغییر بدی
+    baseURL: '/api',
     headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
