@@ -138,6 +138,8 @@
         </div>
       </div>
     </div>
+      <router-link class="btn btn-dark" :to="{name:'users'}">Users</router-link>
+
   </div>
 
   <!-- Edit Grade Modal -->
