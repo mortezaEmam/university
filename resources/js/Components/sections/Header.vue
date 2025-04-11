@@ -4,7 +4,7 @@
       <!-- نام کاربر و آیکن آن، با کمی فاصله -->
       <div class="relative flex items-center gap-1 ms-4 ">
         <img src="/assets/icons/user-check.svg" alt="user" class="w-5 h-5" />
-        <span @click="toggleDropdown" class="cursor-pointer whitespace-nowrap text-user" style="margin-left: 70px">{{ userName }}</span>
+        <span @click="toggleDropdown" class="cursor-pointer whitespace-nowrap text-user">{{ userName }}</span>
 
         <!-- منوی پاپ‌آپ -->
         <div v-if="isDropdownOpen && userName" class="absolute right-0 mt-2 bg-white text-black rounded-lg shadow-lg p-2 z-50">
