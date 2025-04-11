@@ -17,19 +17,31 @@ class StudentController extends Controller
         return response()->json($students);
     }
 
-    public function show($id)
+    public function show($userId)
     {
-        $student = Student::query()->find($id);
-        return response()->json($student);
+        $user = User::query()->with('student.faculty','student.department')->find($userId);
+        return response()->json(['user' => $user]);
     }
 
     public function grades($userId)
     {
-        $student = Student::with(['grades.course', 'faculty', 'department', 'grades.teacher', 'user'])
-            ->where('user_id', $userId)
-            ->first();
-        return response()->json($student);
+        $grades = Grade::query()->whereHas('student.user',function ($query) use ($userId){
+            $query->where('id',$userId);
+        })
+            ->with(['student.faculty', 'student.department', 'teacher', 'student.user','course'])
+            ->paginate(1); // صفحه‌بندی درست
+        return response()->json([
+            'data' => $grades->items(), // فقط نمرات این صفحه
+            'meta' => [
+                'current_page' => $grades->currentPage(),
+                'last_page' => $grades->lastPage(),
+                'per_page' => $grades->perPage(),
+                'total' => $grades->total(),
+            ],
+        ]);
     }
+
+
 
     public function updateGrade(Request $request, $studentId, $gradeId)
     {

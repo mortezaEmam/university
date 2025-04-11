@@ -14,46 +14,46 @@
               <div class="col-md-4 mb-3">
                 <div class="info-field">
                   <span class="info-label">نام:</span>
-                  <span class="info-value">{{ student?.user.first_name }}</span>
+                  <span class="info-value">{{ user?.first_name }}</span>
                 </div>
               </div>
               <div class="col-md-4 mb-3">
                 <div class="info-field">
                   <span class="info-label">رشته:</span>
-                  <span class="info-value">{{ student?.major }}</span>
+                  <span class="info-value">{{ user.student?.major }}</span>
                 </div>
               </div>
               <div class="col-md-4 mb-3">
                 <div class="info-field">
                   <span class="info-label">دانشکده:</span>
-                  <span class="info-value">{{ student?.faculty.name }}</span>
+                  <span class="info-value">{{ user.student?.faculty.name }}</span>
                 </div>
               </div>
               <div class="col-md-4 mb-3">
                 <div class="info-field">
                   <span class="info-label">نام خانوادگی:</span>
-                  <span class="info-value">{{ student?.user.last_name }}</span>
+                  <span class="info-value">{{ user?.last_name }}</span>
                 </div>
               </div>
 
               <div class="col-md-4 mb-3">
                 <div class="info-field">
                   <span class="info-label">شماره دانشجویی:</span>
-                  <span class="info-value">{{ student?.student_number }}</span>
+                  <span class="info-value">{{ user?.student.student_number }}</span>
                 </div>
               </div>
 
               <div class="col-md-4 mb-3">
                 <div class="info-field">
                   <span class="info-label">گروه آموزشی:</span>
-                  <span class="info-value">{{ student?.department.name }}</span>
+                  <span class="info-value">{{ user?.student?.department.name }}</span>
                 </div>
               </div>
             </div>
           </div>
           <div class="col-md-2 student-photo">
 <!--            <div class="">-->
-              <img :src="student?.user.profile_image || '/assets/icons/user-image.png'"
+              <img :src="user?.profile_image || '/assets/icons/user-image.png'"
                    alt="عکس دانشجو"
                    class="img-thumbnail" />
 <!--            </div>-->
@@ -81,7 +81,7 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="(grade, index) in student?.grades || []" :key="index">
+          <tr v-for="(grade, index) in grades || []" :key="index">
             <td>{{ index + 1 }}</td>
             <td>{{ grade.course.course_code }}</td>
             <td>{{ grade.course.title }}</td>
@@ -112,6 +112,22 @@
           </tr>
           </tbody>
         </table>
+        <!-- Pagination Controls -->
+          <ul class="pagination custom-pagination">
+              <li
+                  class="page-item"
+                  v-for="page in pagination.last_page"
+                  :key="page"
+                  :class="{ active: page === pagination.current_page }"
+              >
+                  <a class="page-link" href="#" @click.prevent="fetchPage(page)">
+                      {{ page }}
+                  </a>
+              </li>
+          </ul>
+
+
+
       </div>
 
       <!-- GPA Section -->
@@ -151,7 +167,6 @@
     </div>
   </div>
 </template>
-
 <script>
 import axios from "axios";
 import { ref, computed, onMounted } from "vue";
@@ -159,135 +174,212 @@ import { useRoute } from "vue-router";
 import Swal from "sweetalert2";
 
 export default {
-  setup() {
-    const student = ref({});
-    const loading = ref(true);
-    const route = useRoute();
-    const editingGrade = ref(null);
+    setup() {
+        const user = ref({});
+        const loading = ref(true);
+        const gradesLoading = ref(false);
+        const route = useRoute();
+        const editingGrade = ref(null);
 
-    const getUser = () => {
-      axios
-          .get(`/api/students/${route.params.user}/grades`)
-          .then((response) => {
-            student.value = response.data;
-          })
-          .catch((error) => {
-            console.log(error);
-          })
-          .finally(() => {
-            loading.value = false;
-          });
-    };
+        const grades = ref([]);
+        const pagination = ref({
+            current_page: 1,
+            last_page: 1,
+            per_page: 10,
+            total: 0,
+        });
 
+        // دریافت اطلاعات دانشجو فقط یک‌بار
+        const getUser = () => {
+            loading.value = true;
+            axios
+                .get(`/api/students/${route.params.user}`)
+                .then((response) => {
+                    console.log(response.data);
+                    user.value = response.data.user;
+                })
+                .catch((error) => {
+                    console.log(error);
+                })
+                .finally(() => {
+                    loading.value = false;
+                });
+        };
 
-    const updateGrade = () => {
-      if (!editingGrade.value) return;
+        // دریافت فقط جدول نمرات
+        const getGrades = (page = 1) => {
+            gradesLoading.value = true;
+            axios
+                .get(`/api/students/${route.params.user}/grades?page=${page}`)
+                .then((response) => {
+                    grades.value = response.data.data;
+                    pagination.value = response.data.meta;
+                })
+                .catch((error) => {
+                    console.log(error);
+                })
+                .finally(() => {
+                    gradesLoading.value = false;
+                });
+        };
 
-      const studentId = route.params.user;
-      const gradeId = editingGrade.value.id;
+        // تغییر صفحه
+        function fetchPage(page) {
+            pagination.value.current_page = page;
+            getGrades(page);
+        }
 
-      const payload = {
-        grade: editingGrade.value.grade,
-        status: editingGrade.value.status,
-        description: editingGrade.value.description || null,
-      };
+        const updateGrade = () => {
+            if (!editingGrade.value) return;
 
-      axios.put(`/api/students/${studentId}/grades/${gradeId}`, payload)
-          .then(() => {
+            const studentId = route.params.user;
+            const gradeId = editingGrade.value.id;
+
+            const payload = {
+                grade: editingGrade.value.grade,
+                status: editingGrade.value.status,
+                description: editingGrade.value.description || null,
+            };
+
+            axios
+                .put(`/api/students/${studentId}/grades/${gradeId}`, payload)
+                .then(() => {
+                    getGrades(pagination.value.current_page);
+                    editingGrade.value = null;
+                    Swal.fire({
+                        title: "متشکرم!",
+                        text: "نمره دانشجو با موفقیت ویرایش شد",
+                        icon: "success",
+                        confirmButtonText: "باشه",
+                    });
+                });
+        };
+
+        const deleteGrade = (gradeId) => {
+            const studentId = route.params.user;
+
+            if (confirm("آیا از حذف این نمره مطمئن هستید؟")) {
+                axios
+                    .delete(`/api/students/${studentId}/grades/${gradeId}`)
+                    .then(() => {
+                        getGrades(pagination.value.current_page);
+                    });
+            }
+        };
+
+        const editGrade = (grade) => {
+            editingGrade.value = { ...grade };
+        };
+
+        const getGradeStatus = (status) => {
+            switch (status) {
+                case "finalized":
+                    return "قطعی";
+                case "pending":
+                    return "در حال بررسی";
+                case "reviewing":
+                default:
+                    return "اعلام شده";
+            }
+        };
+
+        const getStatusClass = (status) => {
+            switch (status) {
+                case "finalized":
+                    return "status-passed";
+                case "reviewing":
+                    return "status-incomplete";
+                case "pending":
+                default:
+                    return "status-pending";
+            }
+        };
+
+        const averageGrade = computed(() => {
+            if (!grades.value.length) return "---";
+
+            const validGrades = grades.value.filter(
+                (grade) => typeof grade.grade === "number" && grade.course?.credit
+            );
+
+            if (validGrades.length === 0) return "---";
+
+            const totalCredits = validGrades.reduce(
+                (sum, grade) => sum + grade.course.credit,
+                0
+            );
+            const totalWeightedGrades = validGrades.reduce(
+                (sum, grade) => sum + grade.grade * grade.course.credit,
+                0
+            );
+
+            return totalCredits
+                ? (totalWeightedGrades / totalCredits).toFixed(2)
+                : "---";
+        });
+
+        onMounted(() => {
             getUser();
-            editingGrade.value = null;
-            Swal.fire({
-              title: "متشکرم!",
-              text: "نمره دانشجو با موفقیت ویرایش شد",
-              icon: "success",
-              confirmButtonText: "Ok",
-            });
-          });
-    };
+            getGrades();
+        });
 
-    const deleteGrade = (gradeId) => {
-      const studentId = route.params.student;
-
-      if (confirm('آیا از حذف این نمره مطمئن هستید؟')) {
-        axios.delete(`/api/students/${studentId}/grades/${gradeId}`)
-            .then(() => {
-              fetchStudentGrades();
-            });
-      }
-    };
-
-
-    const editGrade = (grade) => {
-      editingGrade.value = { ...grade };
-    };
-
-    const getGradeStatus = (status) => {
-      switch (status) {
-        case "finalized":
-          return "قطعی";
-        case "pending":
-          return "در حال بررسی";
-        case "reviewing":
-        default:
-          return "اعلام شده";
-      }
-    };
-
-    const getStatusClass = (status) => {
-      switch (status) {
-        case "finalized":
-          return "status-passed";
-        case "reviewing":
-          return "status-incomplete";
-        case "pending":
-        default:
-          return "status-pending";
-      }
-    };
-
-    const averageGrade = computed(() => {
-      if (!student.value.grades) return "---";
-
-      const validGrades = student.value.grades.filter(
-          (grade) =>
-              typeof grade.grade === "number" && grade.course?.credit
-      );
-
-      if (validGrades.length === 0) return "---";
-
-      const totalCredits = validGrades.reduce(
-          (sum, grade) => sum + grade.course.credit,
-          0
-      );
-      const totalWeightedGrades = validGrades.reduce(
-          (sum, grade) => sum + grade.grade * grade.course.credit,
-          0
-      );
-
-      return totalCredits
-          ? (totalWeightedGrades / totalCredits).toFixed(2)
-          : "---";
-    });
-
-    onMounted(getUser);
-
-    return {
-      student,
-      loading,
-      editingGrade,
-      editGrade,
-      updateGrade,
-      deleteGrade,
-      getGradeStatus,
-      getStatusClass,
-      averageGrade,
-    };
-  },
+        return {
+            user,
+            grades,
+            pagination,
+            loading,
+            gradesLoading,
+            editingGrade,
+            updateGrade,
+            deleteGrade,
+            editGrade,
+            getGradeStatus,
+            getStatusClass,
+            averageGrade,
+            fetchPage,
+        };
+    },
 };
 </script>
-
-
 <style scoped>
+.custom-pagination {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+    direction: rtl; /* این باعث میشه همه چیز راست‌چین بشه */
+}
+
+.custom-pagination .page-item .page-link {
+    background-color: #9E0B0F;
+    text-align: center;
+    line-height: 100%;
+    font-size: 17px;
+    font-weight: 600;
+    color: white;
+    transition: 0.2s;
+    cursor: pointer;
+    width: 24px;
+    height: 25px;
+
+}
+
+.custom-pagination .page-item a {
+    color: white !important;
+    text-decoration: none;
+    display: block;
+}
+
+.custom-pagination .page-item:hover {
+    background-color: darkred;
+}
+
+.custom-pagination .page-item.active {
+    background-color: #990000;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   font-weight: 500;
