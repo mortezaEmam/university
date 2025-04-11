@@ -15,8 +15,8 @@ class UsersTableSeeder extends Seeder
             'national_code' => '1234567890',
             'first_name' => 'مدیر',
             'last_name' => 'سیستم',
-            'email' => 'admin@university.ac.ir',
-            'password' => Hash::make('password'),
+            'email' => 'admin@gmail.com',
+            'password' => Hash::make('123'),
             'type' => 'admin'
         ]);
 

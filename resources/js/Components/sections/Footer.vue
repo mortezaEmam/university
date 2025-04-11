@@ -1,18 +1,31 @@
 <template>
-    <footer class="footer bg-red-800 text-white px-4 py-3 position-fixed bottom-0 left-0 right-0 flex items-center justify-between rtl">
-        <!-- متن سمت راست -->
-        <div class="text-xs">
-            دانشگاه آزاد اسلامی واحد مشهد
-        </div>
+  <footer class="footer bg-red-800 text-white px-4 py-3 fixed bottom-0 left-0 right-0 w-full flex items-center justify-between rtl">
+    <!-- متن سمت راست -->
+    <div class="text-xs">
+      دانشگاه آزاد اسلامی واحد مشهد
+    </div>
 
-        <!-- تاریخ داینامیک سمت چپ -->
-        <div class="flex items-center gap-1 text-xs">
-            <span>{{ todayLabel }}</span>
-            <span>:</span>
-            <span>{{ formattedDate }}</span>
+    <!-- تاریخ داینامیک سمت چپ -->
+    <div class="flex items-center gap-1 text-xs">
+      <span>{{ todayLabel }}</span>
+      <span>:</span>
+      <span>{{ formattedDate }}</span>
+    </div>
+  </footer>
+<!--    <footer class="footer bg-red-800 text-white px-4 py-3 position-fixed bottom-0 left-0 right-0 flex items-center justify-between rtl">-->
+<!--        &lt;!&ndash; متن سمت راست &ndash;&gt;-->
+<!--        <div class="text-xs">-->
+<!--            دانشگاه آزاد اسلامی واحد مشهد-->
+<!--        </div>-->
 
-        </div>
-    </footer>
+<!--        &lt;!&ndash; تاریخ داینامیک سمت چپ &ndash;&gt;-->
+<!--        <div class="flex items-center gap-1 text-xs">-->
+<!--            <span>{{ todayLabel }}</span>-->
+<!--            <span>:</span>-->
+<!--            <span>{{ formattedDate }}</span>-->
+
+<!--        </div>-->
+<!--    </footer>-->
 </template>
 
 <script>
@@ -60,15 +73,15 @@ export default {
 </script>
 
 <style scoped>
-.footer {
-    font-family: 'IRANSans', sans-serif;
-    direction: rtl;
-    font-size: 0.75rem; /* 12px */
-    line-height: 1rem; /* 16px */
+/* اضافه کردن این موارد */
+body {
+  margin: 0;
 }
 
-.rtl {
-    direction: rtl;
-    unicode-bidi: embed;
+.footer {
+  font-family: 'IRANSans', sans-serif;
+  direction: rtl;
+  font-size: 0.75rem; /* 12px */
+  line-height: 1rem; /* 16px */
 }
 </style>

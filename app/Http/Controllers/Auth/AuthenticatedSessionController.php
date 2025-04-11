@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -29,12 +30,24 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // احراز هویت کاربر
         $request->authenticate();
 
+        // ایجاد یک نشست جدید برای کاربر
         $request->session()->regenerate();
 
+        // استخراج اطلاعات اعتبارسنجی (ایمیل و پسورد)
+        $credentials = $request->only('email', 'password');
+        // تولید توکن JWT
+        if ($token = JWTAuth::attempt($credentials)) {
+            // بازگشت به صفحه دَش‌بورد با توکن JWT در هدر Authorization
+            return response()->json(['token' => $token]);
+        }
+
+        // اگر احراز هویت انجام نشد، کاربر را به صفحه دَش‌بورد هدایت می‌کنیم
         return redirect()->intended(route('dashboard', absolute: false));
     }
+
 
     /**
      * Destroy an authenticated session.
