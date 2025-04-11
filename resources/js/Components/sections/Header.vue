@@ -7,7 +7,7 @@
         <span @click="toggleDropdown" class="cursor-pointer whitespace-nowrap text-user" style="margin-left: 70px">{{ userName }}</span>
 
         <!-- منوی پاپ‌آپ -->
-        <div v-if="isDropdownOpen" class="absolute right-0 mt-2 bg-white text-black rounded-lg shadow-lg p-2 z-50">
+        <div v-if="isDropdownOpen && userName" class="absolute right-0 mt-2 bg-white text-black rounded-lg shadow-lg p-2 z-50">
           <ul>
             <li @click="viewProfile" class="cursor-pointer hover:bg-gray-100 px-4 py-2 whitespace-nowrap">مشاهده پروفایل</li>
             <li @click="logout" class="cursor-pointer hover:bg-gray-100 px-4 py-2 whitespace-nowrap">خروج</li>
